@@ -58,7 +58,8 @@ Paris.sync();
 // Récupération de tous les paris avec Sqlite
 const getAllParis = (req, res) => {
 
-  Paris.findAll({attributes: {exclude: ['updatedAt']} })
+
+  Paris.findAll({ attributes: {exclude: ['updatedAt']}, order: [['date', 'ASC']] })
        .then(rows => res.status(200).send(rows))
        .catch(err => {
           console.error(err);
