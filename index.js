@@ -71,7 +71,7 @@ const insertNewParis = (req, res) => {
       console.error(err);
       return res.status(503).send('Echoué pour créé Pari cause d\'un problème de connexion à la base de données');
     } 
-    return res.status(200).send('Pari créé');
+    return res.status(201).send('Pari créé');
   });
 };
 
@@ -99,7 +99,7 @@ const generateParis = (req, res, amount) => {
       console.error(err);
       return res.status(503).send('Echoué pour créé Paries cause d\'un problème de connexion à la base de données');
     } 
-    return res.status(200).send('10 Paris générés aléatoirement');
+    return res.status(201).send('10 Paris générés aléatoirement');
   });
 };
 
