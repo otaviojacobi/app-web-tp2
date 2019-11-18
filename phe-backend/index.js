@@ -51,7 +51,7 @@ const sequelize = new Sequelize({
 class Paris extends Model {}
 Paris.init({
   author: DataTypes.STRING,
-  cheval: DataTypes.INTEGER,
+  horse: DataTypes.INTEGER,
 }, { sequelize, modelName: 'paris', createdAt: 'date' });
 Paris.sync();
 
@@ -71,10 +71,10 @@ const getAllParis = (req, res) => {
 const insertNewParis = (req, res) => {
 
   if(_isNewParisBodyValid(req.body)) {
-      return res.status(400).send('Le body doit contenir "author" et "cheval". Le premier doit être une chaîne de caractères et le second un entier.');
+      return res.status(400).send('Le body doit contenir "author" et "horse". Le premier doit être une chaîne de caractères et le second un entier.');
   }
 
-  return Paris.create({ author: req.body.author, cheval: req.body.cheval})
+  return Paris.create({ author: req.body.author, horse: req.body.horse})
               .then(_ => res.status(201).send('Pari créé'))
               .catch(err => {
                 console.error(err);
@@ -84,10 +84,10 @@ const insertNewParis = (req, res) => {
 
 const _isNewParisBodyValid = body => {
   return !body.author || 
-         !body.cheval || 
+         !body.horse || 
          typeof body.author !== 'string' || 
-         typeof body.cheval !== 'number' || 
-         !Number.isInteger(body.cheval);
+         typeof body.horse !== 'number' || 
+         !Number.isInteger(body.horse);
 };
 
 
@@ -96,7 +96,7 @@ const generateParis = (req, res, amount) => {
   
   const paris = [];
   for(let i = 0; i < amount; i++) {
-    paris.push({author: faker.name.firstName(), cheval: faker.random.number({min: 1, max: 10}) });
+    paris.push({author: faker.name.firstName(), horse: faker.random.number({min: 1, max: 10}) });
   }
 
   return Paris.bulkCreate(paris)
