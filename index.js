@@ -59,7 +59,7 @@ Paris.sync();
 const getAllParis = (req, res) => {
 
 
-  Paris.findAll({ attributes: {exclude: ['updatedAt']}, order: [['date', 'ASC']] })
+  Paris.findAll({ attributes: {exclude: ['updatedAt']}, order: [['date', 'DESC']] })
        .then(rows => res.status(200).send(rows))
        .catch(err => {
           console.error(err);
