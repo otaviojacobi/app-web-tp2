@@ -9,7 +9,7 @@
         <b-col cols="4">
           <b-form @submit="addPari">
             <b-form-group id="author" label="Votre nom :" label-for="author">
-              <b-form-input id="author" v-model="form.author"></b-form-input>
+              <b-form-input id="author" v-model="form.author" :disabled="isInputNameDisabled"></b-form-input>
             </b-form-group>
             <b-form-group
               id="horse"
@@ -21,10 +21,11 @@
             <b-button type="submit" variant="primary">Parier</b-button>
           </b-form>
           <b-button variant="info" class="mt-2"  v-on:click="generateParis">Générer des paris</b-button>
+          <b-alert v-model="showErrorAlert" variant="danger" dismissible>
+            {{errorMessage}}
+          </b-alert>
         </b-col>
         <b-col cols="8">Liste des paris :
-          
-          <!-- v-for="item in items" -->
           <b-list-group>
             <b-list-group-item v-for="item in paris" :key="item.id">
               <template v-if="item.author === form.author">
@@ -62,6 +63,9 @@ export default {
   },
   data: function() {
     return {
+      isInputNameDisabled: false,
+      showErrorAlert: false,
+      errorMessage: '',
       form: {
         author: '',
         horse: null,
@@ -86,14 +90,22 @@ export default {
     addPari: function(event) {
       event.preventDefault();
 
-      console.log(this.form);
+      if(this.form.author == '' || this.form.horse == null) {
+        this.errorMessage = 'Form must have both your name and your betting horse',
+        this.showErrorAlert = true;
+        return;
+      }
+
 
       axios
         .post('http://localhost:3000/paris', this.form)
         .then(_ => {
+          this.isInputNameDisabled = true;
           this.loadParis();
         })
         .catch(e => {
+          this.errorMessage = `We're sorry but we had an issue creating your bet. Please retry later` ,
+          this.showErrorAlert = true;
           console.error(e);
         });
     },
@@ -105,6 +117,8 @@ export default {
           this.paris = response.data;
         })
         .catch(e => {
+          this.errorMessage = `We're sorry but we had an issue loading the bets. Please retry later` ,
+          this.showErrorAlert = true;
           console.error(e);
         });
     },
@@ -115,16 +129,20 @@ export default {
           this.paris = this.paris.filter(paris => paris.id !== id)
         })
         .catch(e => {
+          this.errorMessage = `We're sorry but we had an issue deleting your bet. Please retry later` ,
+          this.showErrorAlert = true;
           console.error(e);
         });
     },
     generateParis: function() {
       axios
         .post('http://localhost:3000/paris/generate')
-        .then(_ => { //TODO: check if err..
+        .then(_ => {
           this.loadParis();
         })
         .catch(e => {
+          this.errorMessage = `We're sorry but we had an issue generating bets. Please retry later` ,
+          this.showErrorAlert = true;
           console.error(e);
         });
     },
