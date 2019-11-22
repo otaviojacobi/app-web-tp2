@@ -7,7 +7,7 @@
     <b-container>
       <b-row>
         <b-col cols="4">
-          <b-form @submit="addPari">
+          <b-form @submit.prevent="addPari" @reset.prevent="onReset">
             <b-form-group id="author" label="Votre nom :" label-for="author">
               <b-form-input id="author" v-model="form.author" :disabled="isInputNameDisabled"></b-form-input>
             </b-form-group>
@@ -19,8 +19,9 @@
              <b-form-select id="horse" v-model="form.horse" :options="horses"></b-form-select>
             </b-form-group>
             <b-button type="submit" variant="primary">Parier</b-button>
+            <b-button type="reset" class="ml-2" variant="danger">Reset</b-button>
           </b-form>
-          <b-button variant="info" class="mt-2"  v-on:click="generateParis">Générer des paris</b-button>
+          <b-button variant="info" class="mt-2"  @click="generateParis">Générer des paris</b-button>
           <b-alert v-model="showErrorAlert" variant="danger" dismissible>
             {{errorMessage}}
           </b-alert>
@@ -88,8 +89,6 @@ export default {
   },
   methods: {
     addPari: function(event) {
-      event.preventDefault();
-
       if(this.form.author == '' || this.form.horse == null) {
         this.errorMessage = 'Form must have both your name and your betting horse',
         this.showErrorAlert = true;
@@ -109,7 +108,11 @@ export default {
           console.error(e);
         });
     },
-    onReset: function(event) {},
+    onReset: function(event) {
+      this.form.author = '';
+      this.form.horse = null;
+      this.isInputNameDisabled = false;
+    },
     loadParis: function() {
       axios
         .get('http://localhost:3000/paris')
@@ -171,4 +174,3 @@ export default {
   vertical-align: middle;
 }
 </style>
-
