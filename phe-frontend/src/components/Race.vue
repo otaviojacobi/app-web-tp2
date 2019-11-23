@@ -72,7 +72,7 @@ export default {
   },
   methods: {
     addPari: function(event) {
-      if(this.curAuthor == '' || this.form.horse == null) {
+      if(!this.curAuthor || !this.form.horse) {
         this.errorMessage = 'Form must have both your name and your betting horse',
         this.showErrorAlert = true;
         return;

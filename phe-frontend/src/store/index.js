@@ -5,8 +5,8 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    loggedIn: false,
-    username: ''
+    loggedIn: localStorage.getItem('name') !== '',
+    username: localStorage.getItem('name')
   },
   mutations: {
     login(state, user) {

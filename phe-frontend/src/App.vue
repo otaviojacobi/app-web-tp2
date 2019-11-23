@@ -26,7 +26,10 @@ export default {
   methods: {
     logout: function(event) {
       this.$store.dispatch('logout')
-        .then(() => this.$router.push('/'));
+        .then(() => {
+          localStorage.removeItem('name');
+          this.$router.push('/')
+        });
     }
   },
   computed: {
