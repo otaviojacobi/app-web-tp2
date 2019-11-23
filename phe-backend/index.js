@@ -1,17 +1,17 @@
-'use strict;'
+"use strict;";
 
-const express = require('express');
-const faker = require('faker');
-const cors = require('cors');
-const bodyParser = require('body-parser');
+const express = require("express");
+const faker = require("faker");
+const cors = require("cors");
+const bodyParser = require("body-parser");
 
-const { Sequelize, Model, DataTypes } = require('sequelize');
+const Sequelize = require("sequelize");
 
 // Initialisation serveur
 const app = express();
 
 // Configuration Faker
-faker.locale = 'fr';
+faker.locale = "fr";
 
 // Sécurité
 app.use(cors());
@@ -20,105 +20,126 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Route /
-app.get('/', (req, res) => {
-  res.status(200).send('PONG');
+app.get("/", function(req, res) {
+  res.send("Server is OK :)");
 });
 
-app.get('/paris', (req, res) => {
-  getAllParis(req, res);
-});
+/* Partie Sequelizer */
 
-app.post('/paris', (req, res) => {
-  insertNewParis(req, res);
-});
+// Connexion à la base de donnée avec Sequelize
+const sequelize = new Sequelize("sqlite:database-chat.db");
 
-app.post('/paris/generate', (req, res) => {
-  generateParis(req, res, 10);
-});
-
-app.delete('/paris/:id', (req, res) => {
-  deleteParis(req, res);
-});
-
-/* Partie SQLite */
- // Connexion à la base de donnée avec sqlite
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: './database-phe.db'
-});
-
-// Initialisation de la table paris
-class Paris extends Model {}
-Paris.init({
-  author: DataTypes.STRING,
-  horse: DataTypes.INTEGER,
-}, { sequelize, modelName: 'paris', createdAt: 'date' });
-Paris.sync();
-
-// Récupération de tous les paris avec Sqlite
-const getAllParis = (req, res) => {
-
-
-  Paris.findAll({ attributes: {exclude: ['updatedAt']}, order: [['date', 'DESC']] })
-       .then(rows => res.status(200).send(rows))
-       .catch(err => {
-          console.error(err);
-          return res.status(503).send('Nous avons eu un problème de connexion à la base de données');
-       });
-};
-
-// Ajout d'un pari avec Sqlite
-const insertNewParis = (req, res) => {
-
-  if(_isNewParisBodyValid(req.body)) {
-      return res.status(400).send('Le body doit contenir "author" et "horse". Le premier doit être une chaîne de caractères et le second un entier.');
+// Modèle Pari avec Sequelize
+const Bet = sequelize.define("bet", {
+  author: {
+    type: Sequelize.STRING
+  },
+  horse: {
+    type: Sequelize.INTEGER
   }
+});
 
-  return Paris.create({ author: req.body.author, horse: req.body.horse})
-              .then(_ => res.status(201).send('Pari créé'))
-              .catch(err => {
-                console.error(err);
-                return res.status(503).send('Echoué pour créé Pari cause d\'un problème de connexion à la base de données');
-              });
-};
-
-const _isNewParisBodyValid = body => {
-  return !body.author || 
-         !body.horse || 
-         typeof body.author !== 'string' || 
-         typeof body.horse !== 'number' || 
-         !Number.isInteger(body.horse);
-};
-
-
-// Génération de 10 paris aléatoires avec Sqlite
-const generateParis = (req, res, amount) => {
-  
-  const paris = [];
-  for(let i = 0; i < amount; i++) {
-    paris.push({author: faker.name.firstName(), horse: faker.random.number({min: 1, max: 10}) });
+// Modèle User avec Sequelize
+const User = sequelize.define("user", {
+  username: {
+    type: Sequelize.STRING
+  },
+  password: {
+    type: Sequelize.STRING
   }
+});
 
-  return Paris.bulkCreate(paris)
-              .then(_ => res.status(201).send('10 Paris générés aleatoirement'))
-              .catch(err => {
-                console.error(err);
-                res.status(503).send('Echoué pour créé Pari cause d\'un problème de connexion à la base de données');
-              });
-};
+// Création des tables
+Bet.sync({ force: true }).then(() => console.log("Table paris créée"));
+User.sync({ force: true }).then(() => {
+  console.log("Table user créée");
+  User.create({
+    username: "alice",
+    password: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+  });
+  User.create({
+    username: "bob",
+    password: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+  });
+  User.create({
+    username: "cyril",
+    password: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+  });
+});
 
-// Suppression d'un pari avec Sqlite
-const deleteParis = (req, res) => {
-  return Paris.destroy({where: { id : req.params.id }})
-              .then(deleted => deleted ? res.status(200).send('Pari supprimé') : res.status(400).send('N\'a trouvé paris avec cette id'))
-              .catch(err => {
-                console.error(err);
-                res.status(503).send('Echoué pour créé Pari cause d\'un problème de connexion à la base de données');
-              });
-};
+// Création d'utilisateurs
+
+// Récupération de tous les paris avec Sequelizer
+app.get("/paris", function(req, res) {
+  Bet.findAll({ order: sequelize.literal("createdAt DESC") }).then(
+    paris => {
+      res.send(paris);
+    }
+  );
+});
+
+// Ajout d'un pari avec Sequelizer
+app.post("/paris", function(req, res) {
+  const author = req.body.author;
+  const horse = req.body.horse;
+  Bet.create({
+    author: author,
+    horse: horse
+  })
+  .then((pari) => io.emit("PARI_ADDED", pari))
+  .then(() => res.status(201).send("Pari created"));
+});
+
+// Génération de 10 paris aléatoires avec Sequelizer
+app.post("/paris/generate", function(req, res) {
+  for (let i = 0; i < 10; i++) {
+    const author = faker.name.firstName();
+    const horse = faker.random.number({min: 1, max: 10});
+    Bet.create({
+      author: author,
+      horse: horse
+    });
+  }
+  res.status("201").send("10 Paris created");
+});
+
+// Suppression d'un pari avec Sequelizer
+app.delete("/paris/:id", function(req, res) {
+  const id = req.params.id;
+  Bet.destroy({
+    where: {
+      rowid: id
+    }
+  })
+  .then(() => io.emit("PARI_DELETED", id))
+  .then(res.status("200").send("Pari deleted"));
+});
+
+// Login
+app.post("/login", function(req, res) {
+  const username = req.body.username;
+  const password = req.body.hashedPassword;
+  User.findAll({
+    where: {
+      username: username,
+      password: password
+    }
+  }).then(users => {
+    if (users.length > 0) {
+      res.status("200").send("Access granted");
+    } else {
+      res.status("403").send("Access denied");
+    }
+  });
+});
 
 /* Démarrage serveur */
+const server = app.listen(3000, function() {
+  console.log("Serveur phe-backend démarré !");
+});
 
-app.listen(3000, function () {
-  console.log('Serveur phe-backend démarré !');
+// Socket.io
+const io = require("socket.io")(server);
+io.on("connection", function(socket) {
+  console.log("Connection " + socket.id);
 });
