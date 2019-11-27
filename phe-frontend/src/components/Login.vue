@@ -49,10 +49,10 @@ export default {
         .post("http://localhost:3000/login", { username, hashedPassword })
         .then(response => {
           this.$store.dispatch('login', username)
-            .then(() => {
-              localStorage.setItem('name', username); 
-              this.$router.push('/race')
-            });
+          .then(() => {
+            localStorage.setItem('name', username); 
+            this.$router.push('/race')
+          });
         })
         .catch(error => {
           this.wrongPassword = true;
