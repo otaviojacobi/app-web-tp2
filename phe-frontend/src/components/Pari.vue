@@ -1,6 +1,6 @@
 <template>
   <div>
-    <b-list-group-item v-for="pari in paris" :key="pari.id">
+    <b-list-group-item :key="pari.id">
       <template v-if="pari.author === currentAuthor">
         <b-badge variant="secondary">{{pari.author}}</b-badge>
         a parié sur le cheval {{pari.horse}}
@@ -21,7 +21,7 @@
 <script>
 export default {
   name: 'pari',
-  props: ['paris', 'currentAuthor'],
+  props: ['pari', 'currentAuthor'],
   model: {
     event: 'deletePari'
   }
